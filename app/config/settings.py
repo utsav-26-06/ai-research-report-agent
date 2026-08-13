@@ -2,13 +2,18 @@
 Configuration Module — Settings & Environment Loading
 
 All application-wide configuration is defined here.
-Load from .env file automatically via pydantic-settings.
+Loads from .env file automatically via pydantic-settings.
+
+Stack:
+  LLM + Embeddings : Google Gemini (free via Google AI Studio)
+  Search           : Tavily (free tier — 1000 searches/month)
+  Vector DB        : ChromaDB (local, fully free)
+
 Never import API keys directly — always use get_settings().
 """
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -19,7 +24,7 @@ class Settings(BaseSettings):
     Central settings object for the Research & Report Agent.
 
     All values can be overridden via environment variables or a .env file.
-    Required fields will raise a ValidationError if missing.
+    Required fields raise a ValidationError if missing or invalid.
     """
 
     model_config = SettingsConfigDict(
@@ -29,43 +34,42 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # --- OpenAI ---
-    openai_api_key: str = Field(
+    # --- Google Gemini (LLM + Embeddings) ---
+    gemini_api_key: str = Field(
         ...,
-        description="OpenAI API key (required)",
-        json_schema_extra={"env": "OPENAI_API_KEY"},
+        description="Google Gemini API key — get free at aistudio.google.com",
     )
-    openai_model: str = Field(
-        default="gpt-4o-mini",
-        description="OpenAI chat model name",
+    gemini_model: str = Field(
+        default="gemini-3.5-flash",
+        description="Gemini chat model to use for LLM calls",
     )
-    openai_embedding_model: str = Field(
-        default="text-embedding-3-small",
-        description="OpenAI embedding model name",
+    gemini_embedding_model: str = Field(
+        default="models/text-embedding-004",
+        description="Gemini model to use for text embeddings",
     )
-    openai_max_tokens: int = Field(
+    llm_max_tokens: int = Field(
         default=4096,
         ge=256,
-        le=16384,
-        description="Maximum tokens for LLM responses",
+        le=32768,
+        description="Maximum output tokens for LLM responses",
     )
-    openai_temperature: float = Field(
+    llm_temperature: float = Field(
         default=0.2,
         ge=0.0,
         le=2.0,
-        description="LLM sampling temperature",
+        description="LLM sampling temperature (lower = more deterministic)",
     )
 
     # --- Tavily Search ---
     tavily_api_key: str = Field(
         ...,
-        description="Tavily API key (required)",
+        description="Tavily API key — free tier at tavily.com (1000 searches/month)",
     )
     tavily_max_results: int = Field(
         default=5,
         ge=1,
         le=20,
-        description="Maximum search results per query",
+        description="Maximum search results returned per query",
     )
     tavily_search_depth: str = Field(
         default="basic",
@@ -75,11 +79,11 @@ class Settings(BaseSettings):
     # --- RAG / ChromaDB ---
     chroma_persist_dir: Path = Field(
         default=Path("./data/chroma"),
-        description="Directory for ChromaDB persistent storage",
+        description="Directory for ChromaDB persistent storage (local, free)",
     )
     chroma_collection_name: str = Field(
         default="research_agent",
-        description="ChromaDB collection name",
+        description="ChromaDB collection name for this research session",
     )
 
     # --- Chunking ---
@@ -87,13 +91,13 @@ class Settings(BaseSettings):
         default=800,
         ge=100,
         le=4000,
-        description="Text chunk size in characters",
+        description="Character size of each text chunk for embedding",
     )
     chunk_overlap: int = Field(
         default=100,
         ge=0,
         le=500,
-        description="Overlap between consecutive chunks",
+        description="Character overlap between consecutive chunks",
     )
 
     # --- Source Evaluation ---
@@ -101,47 +105,47 @@ class Settings(BaseSettings):
         default=0.5,
         ge=0.0,
         le=1.0,
-        description="Minimum relevance score to accept a source",
+        description="Minimum relevance score (0–1) to accept a source",
     )
     min_credibility_score: float = Field(
         default=0.4,
         ge=0.0,
         le=1.0,
-        description="Minimum credibility score to accept a source",
+        description="Minimum credibility score (0–1) to accept a source",
     )
     max_sources_per_query: int = Field(
         default=5,
         ge=1,
         le=20,
-        description="Maximum sources to keep per sub-question after filtering",
+        description="Maximum sources kept per sub-question after filtering",
     )
 
     # --- Output ---
     output_dir: Path = Field(
         default=Path("./outputs"),
-        description="Directory for generated report files",
+        description="Directory where generated PDF and DOCX reports are saved",
     )
 
     # --- Logging ---
     log_level: str = Field(
         default="INFO",
-        description="Logging level: DEBUG, INFO, WARNING, ERROR",
+        description="Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL",
     )
 
     # ------------------------------------------------------------------ #
     # Validators
     # ------------------------------------------------------------------ #
 
-    @field_validator("openai_api_key")
+    @field_validator("gemini_api_key")
     @classmethod
-    def validate_openai_key(cls, v: str) -> str:
+    def validate_gemini_key(cls, v: str) -> str:
         v = v.strip()
         if not v:
-            raise ValueError("OPENAI_API_KEY must not be empty")
-        if v == "sk-...your-key-here...":
+            raise ValueError("GEMINI_API_KEY must not be empty")
+        if "your-key-here" in v:
             raise ValueError(
-                "OPENAI_API_KEY is still set to the example placeholder. "
-                "Copy .env.example to .env and add your real key."
+                "GEMINI_API_KEY is still set to the example placeholder. "
+                "Get a free key at https://aistudio.google.com and add it to your .env"
             )
         return v
 
@@ -151,10 +155,10 @@ class Settings(BaseSettings):
         v = v.strip()
         if not v:
             raise ValueError("TAVILY_API_KEY must not be empty")
-        if v == "tvly-...your-key-here...":
+        if "your-key-here" in v:
             raise ValueError(
                 "TAVILY_API_KEY is still set to the example placeholder. "
-                "Copy .env.example to .env and add your real key."
+                "Get a free key at https://tavily.com and add it to your .env"
             )
         return v
 
@@ -189,12 +193,12 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------ #
 
     def ensure_output_dir(self) -> Path:
-        """Create output directory if it doesn't exist."""
+        """Create output directory if it doesn't exist. Returns the path."""
         self.output_dir.mkdir(parents=True, exist_ok=True)
         return self.output_dir
 
     def ensure_chroma_dir(self) -> Path:
-        """Create ChromaDB persist directory if it doesn't exist."""
+        """Create ChromaDB persist directory if it doesn't exist. Returns the path."""
         self.chroma_persist_dir.mkdir(parents=True, exist_ok=True)
         return self.chroma_persist_dir
 
@@ -202,8 +206,8 @@ class Settings(BaseSettings):
         """Safe repr — never exposes API keys."""
         return (
             f"Settings("
-            f"openai_model={self.openai_model!r}, "
-            f"openai_embedding_model={self.openai_embedding_model!r}, "
+            f"gemini_model={self.gemini_model!r}, "
+            f"gemini_embedding_model={self.gemini_embedding_model!r}, "
             f"tavily_search_depth={self.tavily_search_depth!r}, "
             f"chunk_size={self.chunk_size}, "
             f"chunk_overlap={self.chunk_overlap}"
@@ -216,11 +220,11 @@ def get_settings() -> Settings:
     """
     Return the application settings singleton.
 
-    Settings are loaded once and cached. Call get_settings.cache_clear()
-    in tests to reset.
+    Settings are loaded once from .env and cached for the process lifetime.
+    In tests, call get_settings.cache_clear() to reset between test cases.
 
     Raises:
         pydantic_core.ValidationError: If required env vars are missing
-                                       or values are invalid.
+                                       or values fail validation.
     """
     return Settings()

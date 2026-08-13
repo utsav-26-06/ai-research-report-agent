@@ -1,7 +1,7 @@
 """
-Unit tests for app.config.settings — TASK-002
+Unit tests for app.config.settings — TASK-002 (Gemini stack)
 
-Tests run without real API keys by using environment variable overrides.
+Tests run without real API keys by injecting environment variable overrides.
 """
 
 import os
@@ -11,7 +11,6 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-# Always clear the settings cache before each test so env changes take effect
 from app.config.settings import get_settings
 
 
@@ -20,12 +19,12 @@ from app.config.settings import get_settings
 # ---------------------------------------------------------------------------
 
 VALID_ENV = {
-    "OPENAI_API_KEY": "sk-test-key-1234567890",
+    "GEMINI_API_KEY": "AIzaTestKey1234567890",
     "TAVILY_API_KEY": "tvly-test-key-1234567890",
-    "OPENAI_MODEL": "gpt-4o-mini",
-    "OPENAI_EMBEDDING_MODEL": "text-embedding-3-small",
-    "OPENAI_MAX_TOKENS": "4096",
-    "OPENAI_TEMPERATURE": "0.2",
+    "GEMINI_MODEL": "gemini-3.5-flash",
+    "GEMINI_EMBEDDING_MODEL": "models/text-embedding-004",
+    "LLM_MAX_TOKENS": "4096",
+    "LLM_TEMPERATURE": "0.2",
     "TAVILY_MAX_RESULTS": "5",
     "TAVILY_SEARCH_DEPTH": "basic",
     "CHROMA_PERSIST_DIR": "./data/chroma",
@@ -41,7 +40,7 @@ VALID_ENV = {
 
 
 def make_settings(**overrides):
-    """Create a Settings instance with overrides applied on top of VALID_ENV."""
+    """Create a fresh Settings instance with overrides on top of VALID_ENV."""
     get_settings.cache_clear()
     env = {**VALID_ENV, **overrides}
     with patch.dict(os.environ, env, clear=True):
@@ -49,35 +48,58 @@ def make_settings(**overrides):
         return Settings()
 
 
+def make_settings_no_file(**env_vars):
+    """
+    Create Settings using ONLY the provided env_vars — no .env file.
+
+    Used for testing missing-required-key behaviour when a real .env exists
+    on disk (pydantic-settings would otherwise read it and supply the key).
+    """
+    from pydantic_settings import SettingsConfigDict
+    from app.config.settings import Settings
+
+    class _NoFileSettings(Settings):
+        model_config = SettingsConfigDict(
+            env_file=None,          # do NOT read .env
+            env_file_encoding="utf-8",
+            case_sensitive=False,
+            extra="ignore",
+        )
+
+    get_settings.cache_clear()
+    with patch.dict(os.environ, env_vars, clear=True):
+        return _NoFileSettings()
+
+
 # ---------------------------------------------------------------------------
-# TASK-002-T01: All fields load correctly from env vars
+# T01: All fields load correctly
 # ---------------------------------------------------------------------------
 
 class TestSettingsLoading:
 
-    def test_loads_openai_api_key(self):
+    def test_loads_gemini_api_key(self):
         s = make_settings()
-        assert s.openai_api_key == "sk-test-key-1234567890"
+        assert s.gemini_api_key == "AIzaTestKey1234567890"
 
     def test_loads_tavily_api_key(self):
         s = make_settings()
         assert s.tavily_api_key == "tvly-test-key-1234567890"
 
-    def test_loads_openai_model(self):
+    def test_loads_gemini_model(self):
         s = make_settings()
-        assert s.openai_model == "gpt-4o-mini"
+        assert s.gemini_model == "gemini-3.5-flash"
 
-    def test_loads_openai_embedding_model(self):
+    def test_loads_gemini_embedding_model(self):
         s = make_settings()
-        assert s.openai_embedding_model == "text-embedding-3-small"
+        assert s.gemini_embedding_model == "models/text-embedding-004"
 
-    def test_loads_openai_max_tokens(self):
+    def test_loads_llm_max_tokens(self):
         s = make_settings()
-        assert s.openai_max_tokens == 4096
+        assert s.llm_max_tokens == 4096
 
-    def test_loads_openai_temperature(self):
+    def test_loads_llm_temperature(self):
         s = make_settings()
-        assert s.openai_temperature == 0.2
+        assert s.llm_temperature == 0.2
 
     def test_loads_tavily_max_results(self):
         s = make_settings()
@@ -113,44 +135,40 @@ class TestSettingsLoading:
 
 
 # ---------------------------------------------------------------------------
-# TASK-002-T02: Missing required fields raise ValidationError
+# T02: Missing required fields raise ValidationError
 # ---------------------------------------------------------------------------
 
 class TestMissingRequiredFields:
 
-    def test_missing_openai_api_key_raises(self):
-        get_settings.cache_clear()
-        env = {k: v for k, v in VALID_ENV.items() if k != "OPENAI_API_KEY"}
-        with patch.dict(os.environ, env, clear=True):
-            from app.config.settings import Settings
-            with pytest.raises(ValidationError) as exc_info:
-                Settings()
-        assert "openai_api_key" in str(exc_info.value).lower()
+    def test_missing_gemini_api_key_raises(self):
+        # Remove GEMINI_API_KEY from env AND bypass .env file so the key
+        # is truly absent (pydantic-settings reads .env even with clear=True).
+        env = {k: v for k, v in VALID_ENV.items() if k != "GEMINI_API_KEY"}
+        with pytest.raises(ValidationError) as exc_info:
+            make_settings_no_file(**env)
+        assert "gemini_api_key" in str(exc_info.value).lower()
 
     def test_missing_tavily_api_key_raises(self):
-        get_settings.cache_clear()
         env = {k: v for k, v in VALID_ENV.items() if k != "TAVILY_API_KEY"}
-        with patch.dict(os.environ, env, clear=True):
-            from app.config.settings import Settings
-            with pytest.raises(ValidationError) as exc_info:
-                Settings()
+        with pytest.raises(ValidationError) as exc_info:
+            make_settings_no_file(**env)
         assert "tavily_api_key" in str(exc_info.value).lower()
 
-    def test_placeholder_openai_key_raises(self):
+    def test_placeholder_gemini_key_raises(self):
         with pytest.raises(ValidationError, match="placeholder"):
-            make_settings(OPENAI_API_KEY="sk-...your-key-here...")
+            make_settings(GEMINI_API_KEY="AIza...your-key-here...")
 
     def test_placeholder_tavily_key_raises(self):
         with pytest.raises(ValidationError, match="placeholder"):
             make_settings(TAVILY_API_KEY="tvly-...your-key-here...")
 
-    def test_empty_openai_key_raises(self):
+    def test_empty_gemini_key_raises(self):
         with pytest.raises(ValidationError):
-            make_settings(OPENAI_API_KEY="")
+            make_settings(GEMINI_API_KEY="")
 
 
 # ---------------------------------------------------------------------------
-# TASK-002-T03: Validation of individual fields
+# T03: Field-level validation
 # ---------------------------------------------------------------------------
 
 class TestFieldValidation:
@@ -167,13 +185,13 @@ class TestFieldValidation:
         with pytest.raises(ValidationError, match="chunk_overlap"):
             make_settings(CHUNK_SIZE="100", CHUNK_OVERLAP="100")
 
-    def test_negative_max_tokens_raises(self):
+    def test_zero_max_tokens_raises(self):
         with pytest.raises(ValidationError):
-            make_settings(OPENAI_MAX_TOKENS="0")
+            make_settings(LLM_MAX_TOKENS="0")
 
     def test_temperature_above_2_raises(self):
         with pytest.raises(ValidationError):
-            make_settings(OPENAI_TEMPERATURE="3.0")
+            make_settings(LLM_TEMPERATURE="3.0")
 
     def test_relevance_score_above_1_raises(self):
         with pytest.raises(ValidationError):
@@ -185,18 +203,18 @@ class TestFieldValidation:
 
 
 # ---------------------------------------------------------------------------
-# TASK-002-T04: Defaults are correct
+# T04: Defaults are correct
 # ---------------------------------------------------------------------------
 
 class TestDefaults:
 
-    def test_default_openai_model(self):
-        env = {k: v for k, v in VALID_ENV.items() if k != "OPENAI_MODEL"}
+    def test_default_gemini_model(self):
+        env = {k: v for k, v in VALID_ENV.items() if k != "GEMINI_MODEL"}
         get_settings.cache_clear()
         with patch.dict(os.environ, env, clear=True):
             from app.config.settings import Settings
             s = Settings()
-        assert s.openai_model == "gpt-4o-mini"
+        assert s.gemini_model == "gemini-1.5-flash"
 
     def test_default_chunk_size(self):
         env = {k: v for k, v in VALID_ENV.items() if k != "CHUNK_SIZE"}
@@ -214,9 +232,17 @@ class TestDefaults:
             s = Settings()
         assert s.log_level == "INFO"
 
+    def test_default_embedding_model(self):
+        env = {k: v for k, v in VALID_ENV.items() if k != "GEMINI_EMBEDDING_MODEL"}
+        get_settings.cache_clear()
+        with patch.dict(os.environ, env, clear=True):
+            from app.config.settings import Settings
+            s = Settings()
+        assert s.gemini_embedding_model == "models/text-embedding-004"
+
 
 # ---------------------------------------------------------------------------
-# TASK-002-T05: Singleton behavior
+# T05: Singleton behavior
 # ---------------------------------------------------------------------------
 
 class TestSingleton:
@@ -233,22 +259,22 @@ class TestSingleton:
         with patch.dict(os.environ, VALID_ENV, clear=True):
             s1 = get_settings()
         get_settings.cache_clear()
-        with patch.dict(os.environ, {**VALID_ENV, "OPENAI_MODEL": "gpt-4o"}, clear=True):
+        with patch.dict(os.environ, {**VALID_ENV, "GEMINI_MODEL": "gemini-1.5-pro"}, clear=True):
             s2 = get_settings()
         assert s1 is not s2
-        assert s2.openai_model == "gpt-4o"
+        assert s2.gemini_model == "gemini-1.5-pro"
 
 
 # ---------------------------------------------------------------------------
-# TASK-002-T06: Safe repr — no secret leakage
+# T06: Safe repr — no secret leakage
 # ---------------------------------------------------------------------------
 
 class TestSafeRepr:
 
-    def test_repr_does_not_expose_openai_key(self):
+    def test_repr_does_not_expose_gemini_key(self):
         s = make_settings()
         r = repr(s)
-        assert "sk-test-key-1234567890" not in r
+        assert "AIzaTestKey1234567890" not in r
 
     def test_repr_does_not_expose_tavily_key(self):
         s = make_settings()
@@ -258,11 +284,11 @@ class TestSafeRepr:
     def test_repr_contains_model_name(self):
         s = make_settings()
         r = repr(s)
-        assert "gpt-4o-mini" in r
+        assert "gemini-3.5-flash" in r
 
 
 # ---------------------------------------------------------------------------
-# TASK-002-T07: Helper methods
+# T07: Helper methods
 # ---------------------------------------------------------------------------
 
 class TestHelpers:
