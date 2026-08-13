@@ -86,7 +86,7 @@ python -c "import app; print('app importable')"
 
 ## TASK-002 — Configuration Module
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Central settings object — loads `.env`, validates, and exposes typed config to the rest of the app.
 **Dependencies:** TASK-001
 
