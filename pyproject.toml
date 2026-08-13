@@ -32,6 +32,7 @@ dependencies = [
 
     # Structured data
     "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
     "python-dotenv>=1.0.0",
 
     # Report export

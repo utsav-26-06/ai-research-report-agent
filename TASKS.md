@@ -40,7 +40,7 @@ TASK-001 (Foundation)
 
 ## TASK-001 — Project Foundation
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Establish the complete project skeleton — directories, packaging, git, configuration files.
 **Dependencies:** None
 
