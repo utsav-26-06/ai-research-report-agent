@@ -1,4 +1,4 @@
-# Research & Report Agent — Task Roadmap
+﻿# Research & Report Agent â€” Task Roadmap
 
 ## Legend
 ```
@@ -12,36 +12,36 @@
 
 ```
 TASK-001 (Foundation)
-    └── TASK-002 (Config)
-            └── TASK-003 (Models)
-                    └── TASK-004 (Interfaces)
-                            ├── TASK-005 (Query Planner)
-                            ├── TASK-006 (Web Search)      ──> TASK-007 (Extraction)
-                            │                                        └──> TASK-008 (Evaluation)
-                            │                                                  └──> TASK-009 (Chunking)
-                            │                                                             └──> TASK-010 (Embeddings)
-                            │                                                                        └──> TASK-011 (ChromaDB)
-                            │                                                                                   └──> TASK-012 (Retrieval)
-                            └── TASK-013 (RAG Summarization)  [needs 005 + 012]
-                                    └── TASK-014 (Citation Mgmt)
-                                                └── TASK-015 (Report Model & Builder)
-                                                            ├── TASK-016 (DOCX Export)
-                                                            └── TASK-017 (PDF Export)
-                                                                        └── TASK-018 (Research Controller)
-                                                                                    └── TASK-019 (E2E Pipeline Test)
-                                                                                                └── TASK-020 (Streamlit UI)
-                                                                                                            └── TASK-021 (Error Handling & Logging)
-                                                                                                                        └── TASK-022 (Full Test Suite)
-                                                                                                                                    └── TASK-023 (Real API Smoke Test)
-                                                                                                                                                └── TASK-024 (Docs & Audit)
+    â””â”€â”€ TASK-002 (Config)
+            â””â”€â”€ TASK-003 (Models)
+                    â””â”€â”€ TASK-004 (Interfaces)
+                            â”œâ”€â”€ TASK-005 (Query Planner)
+                            â”œâ”€â”€ TASK-006 (Web Search)      â”€â”€> TASK-007 (Extraction)
+                            â”‚                                        â””â”€â”€> TASK-008 (Evaluation)
+                            â”‚                                                  â””â”€â”€> TASK-009 (Chunking)
+                            â”‚                                                             â””â”€â”€> TASK-010 (Embeddings)
+                            â”‚                                                                        â””â”€â”€> TASK-011 (ChromaDB)
+                            â”‚                                                                                   â””â”€â”€> TASK-012 (Retrieval)
+                            â””â”€â”€ TASK-013 (RAG Summarization)  [needs 005 + 012]
+                                    â””â”€â”€ TASK-014 (Citation Mgmt)
+                                                â””â”€â”€ TASK-015 (Report Model & Builder)
+                                                            â”œâ”€â”€ TASK-016 (DOCX Export)
+                                                            â””â”€â”€ TASK-017 (PDF Export)
+                                                                        â””â”€â”€ TASK-018 (Research Controller)
+                                                                                    â””â”€â”€ TASK-019 (E2E Pipeline Test)
+                                                                                                â””â”€â”€ TASK-020 (Streamlit UI)
+                                                                                                            â””â”€â”€ TASK-021 (Error Handling & Logging)
+                                                                                                                        â””â”€â”€ TASK-022 (Full Test Suite)
+                                                                                                                                    â””â”€â”€ TASK-023 (Real API Smoke Test)
+                                                                                                                                                â””â”€â”€ TASK-024 (Docs & Audit)
 ```
 
 ---
 
-## TASK-001 — Project Foundation
+## TASK-001 â€” Project Foundation
 
 **Status:** [x]
-**Purpose:** Establish the complete project skeleton — directories, packaging, git, configuration files.
+**Purpose:** Establish the complete project skeleton â€” directories, packaging, git, configuration files.
 **Dependencies:** None
 
 ### Implementation Requirements
@@ -84,10 +84,10 @@ python -c "import app; print('app importable')"
 
 ---
 
-## TASK-002 — Configuration Module
+## TASK-002 â€” Configuration Module
 
 **Status:** [x]
-**Purpose:** Central settings object — loads `.env`, validates, and exposes typed config to the rest of the app.
+**Purpose:** Central settings object â€” loads `.env`, validates, and exposes typed config to the rest of the app.
 **Dependencies:** TASK-001
 
 ### Implementation Requirements
@@ -99,8 +99,8 @@ python -c "import app; print('app importable')"
 - Support environment-variable overrides
 
 ### Files / Components
-- `app/config/settings.py` — `Settings` model
-- `app/config/__init__.py` — re-exports `get_settings`
+- `app/config/settings.py` â€” `Settings` model
+- `app/config/__init__.py` â€” re-exports `get_settings`
 - `tests/unit/test_config.py`
 
 ### Testing Requirements
@@ -122,26 +122,26 @@ python -c "from app.config import get_settings; s = get_settings(); print(s.open
 
 ---
 
-## TASK-003 — Core Data Models
+## TASK-003 â€” Core Data Models
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Define typed Pydantic models for all entities flowing through the pipeline, ensuring provenance is never lost.
 **Dependencies:** TASK-002
 
 ### Implementation Requirements
 Define at minimum:
-- `ResearchRequest` — user input
-- `ResearchPlan` — planner output with sub-questions
-- `SubQuestion` — id, text, search_queries
-- `SearchResult` — url, title, snippet, query, sub_question_id
-- `SourceDocument` — full content, metadata, provenance
-- `SourceEvaluation` — scores, decision, reasons
-- `ContentChunk` — text, metadata, provenance
-- `EmbeddedChunk` — chunk + embedding vector
-- `Citation` — source reference, in-text marker
-- `Finding` — text, supporting chunks, citations
-- `ReportSection` — title, content, citations
-- `ResearchReport` — full structured report
+- `ResearchRequest` â€” user input
+- `ResearchPlan` â€” planner output with sub-questions
+- `SubQuestion` â€” id, text, search_queries
+- `SearchResult` â€” url, title, snippet, query, sub_question_id
+- `SourceDocument` â€” full content, metadata, provenance
+- `SourceEvaluation` â€” scores, decision, reasons
+- `ContentChunk` â€” text, metadata, provenance
+- `EmbeddedChunk` â€” chunk + embedding vector
+- `Citation` â€” source reference, in-text marker
+- `Finding` â€” text, supporting chunks, citations
+- `ReportSection` â€” title, content, citations
+- `ResearchReport` â€” full structured report
 
 All models must:
 - Use Pydantic v2
@@ -149,11 +149,11 @@ All models must:
 - Preserve `source_id`, `url`, `sub_question_id` traceability
 
 ### Files / Components
-- `app/models/research.py` — `ResearchRequest`, `ResearchPlan`, `SubQuestion`
-- `app/models/sources.py` — `SearchResult`, `SourceDocument`, `SourceEvaluation`
-- `app/models/rag.py` — `ContentChunk`, `EmbeddedChunk`
-- `app/models/report.py` — `Citation`, `Finding`, `ReportSection`, `ResearchReport`
-- `app/models/__init__.py` — re-exports all models
+- `app/models/research.py` â€” `ResearchRequest`, `ResearchPlan`, `SubQuestion`
+- `app/models/sources.py` â€” `SearchResult`, `SourceDocument`, `SourceEvaluation`
+- `app/models/rag.py` â€” `ContentChunk`, `EmbeddedChunk`
+- `app/models/report.py` â€” `Citation`, `Finding`, `ReportSection`, `ResearchReport`
+- `app/models/__init__.py` â€” re-exports all models
 - `tests/unit/test_models.py`
 
 ### Testing Requirements
@@ -168,25 +168,25 @@ python -c "from app.models import ResearchRequest; r = ResearchRequest(topic='AI
 
 ### Acceptance Criteria
 - [ ] All 12 models defined and importable
-- [ ] Provenance chain: `Finding → Citation → SourceDocument → url` traceable
+- [ ] Provenance chain: `Finding â†’ Citation â†’ SourceDocument â†’ url` traceable
 - [ ] Unit tests pass
 
 ---
 
-## TASK-004 — Provider Interfaces (Abstract Base Classes)
+## TASK-004 â€” Provider Interfaces (Abstract Base Classes)
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Define abstract interfaces for all external providers so the business logic is decoupled from specific APIs.
 **Dependencies:** TASK-003
 
 ### Implementation Requirements
 Define abstract base classes for:
-- `SearchProvider` — `search(query: str) -> list[SearchResult]`
-- `ContentExtractor` — `extract(url: str) -> SourceDocument | None`
-- `SourceEvaluator` — `evaluate(doc: SourceDocument, query: str) -> SourceEvaluation`
-- `EmbeddingProvider` — `embed(texts: list[str]) -> list[list[float]]`
-- `VectorStore` — `add(chunks)`, `query(text, n)`, `clear()`
-- `LLMProvider` — `complete(prompt: str) -> str`, `structured_complete(prompt, schema) -> dict`
+- `SearchProvider` â€” `search(query: str) -> list[SearchResult]`
+- `ContentExtractor` â€” `extract(url: str) -> SourceDocument | None`
+- `SourceEvaluator` â€” `evaluate(doc: SourceDocument, query: str) -> SourceEvaluation`
+- `EmbeddingProvider` â€” `embed(texts: list[str]) -> list[list[float]]`
+- `VectorStore` â€” `add(chunks)`, `query(text, n)`, `clear()`
+- `LLMProvider` â€” `complete(prompt: str) -> str`, `structured_complete(prompt, schema) -> dict`
 
 ### Files / Components
 - `app/tools/search/base.py`
@@ -212,27 +212,27 @@ python -c "from app.tools.search.base import SearchProvider; print('interfaces o
 
 ---
 
-## TASK-005 — Query Planning Module
+## TASK-005 â€” Query Planning Module
 
-**Status:** [ ]
-**Purpose:** Break a broad research topic into 4–6 focused, non-overlapping sub-questions using an LLM.
+**Status:** [x]
+**Purpose:** Break a broad research topic into 4â€“6 focused, non-overlapping sub-questions using an LLM.
 **Dependencies:** TASK-004
 
 ### Implementation Requirements
 - Use OpenAI GPT via LangChain with structured output
-- Generate 4–6 sub-questions per topic
+- Generate 4â€“6 sub-questions per topic
 - Deduplicate overlapping questions
 - Return a validated `ResearchPlan` model
 - Handle LLM errors with retry logic (tenacity)
 
 ### Files / Components
-- `app/agent/query_planner.py` — `QueryPlanner` class
+- `app/agent/query_planner.py` â€” `QueryPlanner` class
 - `app/agent/__init__.py`
 - `tests/unit/test_query_planner.py` (mocked LLM)
 - `tests/integration/test_planner_integration.py` (real API, optional)
 
 ### Testing Requirements
-- Mock LLM response — verify `ResearchPlan` is correctly parsed
+- Mock LLM response â€” verify `ResearchPlan` is correctly parsed
 - Test deduplication of near-identical questions
 - Test error path when LLM returns malformed output
 
@@ -247,16 +247,16 @@ print('planner importable')
 ```
 
 ### Acceptance Criteria
-- [ ] Returns `ResearchPlan` with 4–6 `SubQuestion` objects
+- [ ] Returns `ResearchPlan` with 4â€“6 `SubQuestion` objects
 - [ ] Duplicate questions are removed
 - [ ] LLM errors are caught and re-raised as domain exceptions
 - [ ] Unit tests pass
 
 ---
 
-## TASK-006 — Web Search Module (Tavily)
+## TASK-006 â€” Web Search Module (Tavily)
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** For each sub-question, search the web and collect candidate `SearchResult` objects.
 **Dependencies:** TASK-004, TASK-005
 
@@ -273,7 +273,7 @@ print('planner importable')
 - `tests/unit/test_tavily_provider.py` (mocked HTTP)
 
 ### Testing Requirements
-- Mock Tavily HTTP response — verify correct `SearchResult` mapping
+- Mock Tavily HTTP response â€” verify correct `SearchResult` mapping
 - Test URL normalization (trailing slashes, fragments)
 - Test deduplication
 - Test error propagation
@@ -291,9 +291,9 @@ python -c "from app.tools.search.tavily_provider import TavilySearchProvider; pr
 
 ---
 
-## TASK-007 — Content Extraction Module
+## TASK-007 â€” Content Extraction Module
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Fetch web pages and extract clean, readable text using trafilatura.
 **Dependencies:** TASK-004, TASK-006
 
@@ -330,15 +330,15 @@ python -c "from app.tools.extraction.trafilatura_extractor import TrafilaturaExt
 
 ---
 
-## TASK-008 — Source Evaluation Module
+## TASK-008 â€” Source Evaluation Module
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Score and filter extracted sources on relevance, credibility, recency, and redundancy.
 **Dependencies:** TASK-004, TASK-007
 
 ### Implementation Requirements
 - Implement `LLMSourceEvaluator(SourceEvaluator)`
-- Score each dimension 0.0–1.0
+- Score each dimension 0.0â€“1.0
 - Produce a structured `SourceEvaluation` with reasons
 - Apply configurable thresholds (from Settings)
 - Detect and flag redundant sources (high content overlap)
@@ -366,9 +366,9 @@ python -c "from app.tools.evaluation.llm_evaluator import LLMSourceEvaluator; pr
 
 ---
 
-## TASK-009 — Document Chunking
+## TASK-009 â€” Document Chunking
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Split accepted source documents into overlapping text chunks suitable for embedding.
 **Dependencies:** TASK-003, TASK-008
 
@@ -379,7 +379,7 @@ python -c "from app.tools.evaluation.llm_evaluator import LLMSourceEvaluator; pr
 - Reject empty chunks
 
 ### Files / Components
-- `app/rag/chunker.py` — `DocumentChunker`
+- `app/rag/chunker.py` â€” `DocumentChunker`
 - `tests/unit/test_chunker.py`
 
 ### Testing Requirements
@@ -399,9 +399,9 @@ python -c "from app.rag.chunker import DocumentChunker; print('chunker ok')"
 
 ---
 
-## TASK-010 — Embeddings (OpenAI)
+## TASK-010 â€” Embeddings (OpenAI)
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Generate vector embeddings for all content chunks using OpenAI Embeddings API.
 **Dependencies:** TASK-004, TASK-009
 
@@ -433,7 +433,7 @@ python -c "from app.rag.embedding_provider import OpenAIEmbeddingProvider; print
 
 ---
 
-## TASK-011 — ChromaDB Vector Store
+## TASK-011 â€” ChromaDB Vector Store
 
 **Status:** [ ]
 **Purpose:** Persist embedded chunks in ChromaDB for semantic retrieval.
@@ -468,7 +468,7 @@ python -c "from app.rag.vector_store import ChromaVectorStore; print('vectorstor
 
 ---
 
-## TASK-012 — Semantic Retrieval
+## TASK-012 â€” Semantic Retrieval
 
 **Status:** [ ]
 **Purpose:** Given a query string, retrieve the top-N most relevant chunks from ChromaDB.
@@ -500,7 +500,7 @@ python -c "from app.rag.retriever import SemanticRetriever; print('retriever ok'
 
 ---
 
-## TASK-013 — RAG Summarization Module
+## TASK-013 â€” RAG Summarization Module
 
 **Status:** [ ]
 **Purpose:** For each sub-question, retrieve relevant chunks and generate a grounded finding using GPT.
@@ -508,7 +508,7 @@ python -c "from app.rag.retriever import SemanticRetriever; print('retriever ok'
 
 ### Implementation Requirements
 - Implement `RAGSummarizer`
-- For each `SubQuestion`: retrieve evidence chunks → build prompt → call GPT → parse `Finding`
+- For each `SubQuestion`: retrieve evidence chunks â†’ build prompt â†’ call GPT â†’ parse `Finding`
 - Prompt must include evidence text and instruct GPT not to invent facts
 - If evidence is insufficient, indicate clearly (do not fabricate)
 - Preserve chunk/source provenance in each `Finding`
@@ -534,7 +534,7 @@ python -c "from app.generation.rag_summarizer import RAGSummarizer; print('summa
 
 ---
 
-## TASK-014 — Citation Management
+## TASK-014 â€” Citation Management
 
 **Status:** [ ]
 **Purpose:** Build a deduplicated reference list and attach in-text citation markers to findings.
@@ -543,7 +543,7 @@ python -c "from app.generation.rag_summarizer import RAGSummarizer; print('summa
 ### Implementation Requirements
 - Implement `CitationManager`
 - Generate sequential citation numbers [1], [2], ...
-- Deduplicate: same URL → same citation number
+- Deduplicate: same URL â†’ same citation number
 - Attach `Citation` objects to each `Finding`
 - Generate formatted reference list (APA-ish style)
 
@@ -552,8 +552,8 @@ python -c "from app.generation.rag_summarizer import RAGSummarizer; print('summa
 - `tests/unit/test_citation_manager.py`
 
 ### Testing Requirements
-- Test same URL → same citation number
-- Test different URLs → different numbers
+- Test same URL â†’ same citation number
+- Test different URLs â†’ different numbers
 - Test reference list format
 - Test `Finding` citations are populated
 
@@ -570,7 +570,7 @@ python -c "from app.generation.citation_manager import CitationManager; print('c
 
 ---
 
-## TASK-015 — Report Generation
+## TASK-015 â€” Report Generation
 
 **Status:** [ ]
 **Purpose:** Assemble findings into a structured `ResearchReport` with all sections.
@@ -604,7 +604,7 @@ python -c "from app.generation.report_builder import ReportBuilder; print('repor
 
 ---
 
-## TASK-016 — DOCX Export
+## TASK-016 â€” DOCX Export
 
 **Status:** [ ]
 **Purpose:** Export the `ResearchReport` as a professionally formatted `.docx` file.
@@ -638,7 +638,7 @@ python -c "from app.export.docx_exporter import DocxExporter; print('docx export
 
 ---
 
-## TASK-017 — PDF Export
+## TASK-017 â€” PDF Export
 
 **Status:** [ ]
 **Purpose:** Export the `ResearchReport` as a professionally formatted `.pdf` file.
@@ -672,7 +672,7 @@ python -c "from app.export.pdf_exporter import PDFExporter; print('pdf exporter 
 
 ---
 
-## TASK-018 — Research Controller (Orchestrator)
+## TASK-018 â€” Research Controller (Orchestrator)
 
 **Status:** [ ]
 **Purpose:** Coordinate the entire pipeline from topic input to final report output.
@@ -681,7 +681,7 @@ python -c "from app.export.pdf_exporter import PDFExporter; print('pdf exporter 
 ### Implementation Requirements
 - Implement `ResearchController`
 - Accept `ResearchRequest`, yield/report progress at each stage
-- Orchestrate: Plan → Search → Extract → Evaluate → Filter → Chunk → Embed → Store → Retrieve → Summarize → Cite → Build Report → Export
+- Orchestrate: Plan â†’ Search â†’ Extract â†’ Evaluate â†’ Filter â†’ Chunk â†’ Embed â†’ Store â†’ Retrieve â†’ Summarize â†’ Cite â†’ Build Report â†’ Export
 - Log each stage completion
 - Handle partial failures gracefully (skip failed sources, continue)
 - Return `ResearchReport` + file paths
@@ -708,7 +708,7 @@ python -c "from app.agent.research_controller import ResearchController; print('
 
 ---
 
-## TASK-019 — End-to-End Pipeline Test
+## TASK-019 â€” End-to-End Pipeline Test
 
 **Status:** [ ]
 **Purpose:** Verify the complete pipeline works with fully mocked external dependencies.
@@ -717,7 +717,7 @@ python -c "from app.agent.research_controller import ResearchController; print('
 ### Implementation Requirements
 - Complete E2E test using mocked LLM, search, and extraction
 - Verify output: `ResearchReport` with all sections, PDF file, DOCX file
-- Verify citation chain: Finding → Citation → Source → URL
+- Verify citation chain: Finding â†’ Citation â†’ Source â†’ URL
 
 ### Files / Components
 - `tests/integration/test_e2e_pipeline.py`
@@ -734,7 +734,7 @@ python -c "from app.agent.research_controller import ResearchController; print('
 
 ---
 
-## TASK-020 — Streamlit UI
+## TASK-020 â€” Streamlit UI
 
 **Status:** [ ]
 **Purpose:** Professional web interface for the Research & Report Agent.
@@ -763,7 +763,7 @@ python -c "from app.agent.research_controller import ResearchController; print('
 
 ---
 
-## TASK-021 — Error Handling & Logging Polish
+## TASK-021 â€” Error Handling & Logging Polish
 
 **Status:** [ ]
 **Purpose:** Add structured logging and robust error handling throughout.
@@ -787,7 +787,7 @@ python -c "from app.agent.research_controller import ResearchController; print('
 
 ---
 
-## TASK-022 — Complete Test Suite
+## TASK-022 â€” Complete Test Suite
 
 **Status:** [ ]
 **Purpose:** Ensure all unit and integration tests are green.
@@ -796,16 +796,16 @@ python -c "from app.agent.research_controller import ResearchController; print('
 ### Implementation Requirements
 - All unit tests pass: `pytest tests/unit/`
 - All integration tests pass: `pytest tests/integration/`
-- Coverage ≥ 80%
+- Coverage â‰¥ 80%
 
 ### Acceptance Criteria
-- [ ] `pytest tests/unit/` — all pass
-- [ ] `pytest tests/integration/` — all pass
+- [ ] `pytest tests/unit/` â€” all pass
+- [ ] `pytest tests/integration/` â€” all pass
 - [ ] Coverage report generated
 
 ---
 
-## TASK-023 — Real API Smoke Test
+## TASK-023 â€” Real API Smoke Test
 
 **Status:** [ ]
 **Purpose:** Run the full pipeline with real API keys using the canonical test topic.
@@ -817,9 +817,9 @@ Research the impact of artificial intelligence on software development.
 ```
 
 ### Acceptance Criteria
-- [ ] Query planning generates 4–6 sub-questions
+- [ ] Query planning generates 4â€“6 sub-questions
 - [ ] Web search finds results for each sub-question
-- [ ] Content extraction succeeds for ≥ 3 sources
+- [ ] Content extraction succeeds for â‰¥ 3 sources
 - [ ] Source evaluation filters and scores sources
 - [ ] ChromaDB populated with chunks
 - [ ] Retrieval returns relevant evidence
@@ -831,7 +831,7 @@ Research the impact of artificial intelligence on software development.
 
 ---
 
-## TASK-024 — Documentation & Final Audit
+## TASK-024 â€” Documentation & Final Audit
 
 **Status:** [ ]
 **Purpose:** Finalize README, add docstrings, audit code quality.
@@ -851,3 +851,11 @@ Research the impact of artificial intelligence on software development.
 - [ ] `ruff` passes with no warnings
 - [ ] No secrets in git history
 - [ ] `docs/` folder complete
+
+
+
+
+
+
+
+

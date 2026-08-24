@@ -1,5 +1,5 @@
-"""
-Unit tests for app.config.settings — TASK-002 (Gemini stack)
+﻿"""
+Unit tests for app.config.settings â€” TASK-002 (Gemini stack)
 
 Tests run without real API keys by injecting environment variable overrides.
 """
@@ -50,7 +50,7 @@ def make_settings(**overrides):
 
 def make_settings_no_file(**env_vars):
     """
-    Create Settings using ONLY the provided env_vars — no .env file.
+    Create Settings using ONLY the provided env_vars â€” no .env file.
 
     Used for testing missing-required-key behaviour when a real .env exists
     on disk (pydantic-settings would otherwise read it and supply the key).
@@ -214,7 +214,7 @@ class TestDefaults:
         with patch.dict(os.environ, env, clear=True):
             from app.config.settings import Settings
             s = Settings()
-        assert s.gemini_model == "gemini-1.5-flash"
+        assert s.gemini_model == "gemini-3.5-flash"
 
     def test_default_chunk_size(self):
         env = {k: v for k, v in VALID_ENV.items() if k != "CHUNK_SIZE"}
@@ -266,7 +266,7 @@ class TestSingleton:
 
 
 # ---------------------------------------------------------------------------
-# T06: Safe repr — no secret leakage
+# T06: Safe repr â€” no secret leakage
 # ---------------------------------------------------------------------------
 
 class TestSafeRepr:
