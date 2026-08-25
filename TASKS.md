@@ -435,7 +435,7 @@ python -c "from app.rag.embedding_provider import OpenAIEmbeddingProvider; print
 
 ## TASK-011 â€” ChromaDB Vector Store
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Persist embedded chunks in ChromaDB for semantic retrieval.
 **Dependencies:** TASK-004, TASK-010
 
@@ -470,7 +470,7 @@ python -c "from app.rag.vector_store import ChromaVectorStore; print('vectorstor
 
 ## TASK-012 â€” Semantic Retrieval
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Given a query string, retrieve the top-N most relevant chunks from ChromaDB.
 **Dependencies:** TASK-010, TASK-011
 
@@ -502,7 +502,7 @@ python -c "from app.rag.retriever import SemanticRetriever; print('retriever ok'
 
 ## TASK-013 â€” RAG Summarization Module
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** For each sub-question, retrieve relevant chunks and generate a grounded finding using GPT.
 **Dependencies:** TASK-005, TASK-012
 
@@ -536,7 +536,7 @@ python -c "from app.generation.rag_summarizer import RAGSummarizer; print('summa
 
 ## TASK-014 â€” Citation Management
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Build a deduplicated reference list and attach in-text citation markers to findings.
 **Dependencies:** TASK-013
 
@@ -572,7 +572,7 @@ python -c "from app.generation.citation_manager import CitationManager; print('c
 
 ## TASK-015 â€” Report Generation
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Assemble findings into a structured `ResearchReport` with all sections.
 **Dependencies:** TASK-014
 
@@ -851,6 +851,11 @@ Research the impact of artificial intelligence on software development.
 - [ ] `ruff` passes with no warnings
 - [ ] No secrets in git history
 - [ ] `docs/` folder complete
+
+
+
+
+
 
 
 
