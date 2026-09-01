@@ -31,7 +31,7 @@ Given a natural-language research topic, the agent automatically:
 ### 1. Clone & Set Up Environment
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/utsav-26-06/ai-research-report-agent
 cd research-report-agent
 
 python -m venv .venv
