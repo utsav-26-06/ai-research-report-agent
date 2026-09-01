@@ -606,7 +606,7 @@ python -c "from app.generation.report_builder import ReportBuilder; print('repor
 
 ## TASK-016 â€” DOCX Export
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Export the `ResearchReport` as a professionally formatted `.docx` file.
 **Dependencies:** TASK-015
 
@@ -640,7 +640,7 @@ python -c "from app.export.docx_exporter import DocxExporter; print('docx export
 
 ## TASK-017 â€” PDF Export
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Export the `ResearchReport` as a professionally formatted `.pdf` file.
 **Dependencies:** TASK-015
 
@@ -674,7 +674,7 @@ python -c "from app.export.pdf_exporter import PDFExporter; print('pdf exporter 
 
 ## TASK-018 â€” Research Controller (Orchestrator)
 
-**Status:** [ ]
+**Status:** [x]
 **Purpose:** Coordinate the entire pipeline from topic input to final report output.
 **Dependencies:** TASK-005 through TASK-017
 
@@ -851,6 +851,8 @@ Research the impact of artificial intelligence on software development.
 - [ ] `ruff` passes with no warnings
 - [ ] No secrets in git history
 - [ ] `docs/` folder complete
+
+
 
 
 
