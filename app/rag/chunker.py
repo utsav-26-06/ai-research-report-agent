@@ -1,4 +1,4 @@
-﻿"""
+"""
 Document chunking for RAG (TASK-009).
 """
 
@@ -17,13 +17,19 @@ class DocumentChunker:
     suitable for dense vector embedding.
     """
 
-    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 200):
+    def __init__(
+        self,
+        chunk_size: int = 1000,
+        chunk_overlap: int = 200,
+        max_chunks_per_doc: int = 12,
+    ):
         """
         Initialize the chunker.
 
         Args:
-            chunk_size:    Target max character count per chunk.
-            chunk_overlap: Number of characters to overlap between adjacent chunks.
+            chunk_size:         Target max character count per chunk.
+            chunk_overlap:      Number of characters to overlap between adjacent chunks.
+            max_chunks_per_doc: Maximum chunks kept per document (prevents quota exhaustion).
         """
         if chunk_size <= 0:
             raise ValueError("chunk_size must be positive")
@@ -32,7 +38,8 @@ class DocumentChunker:
 
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
-        
+        self.max_chunks_per_doc = max_chunks_per_doc
+
         # Use LangChain's recursive splitter for smart paragraph/sentence boundaries
         self.splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
@@ -64,6 +71,10 @@ class DocumentChunker:
         
         if not raw_chunks:
             return []
+
+        # Cap chunks per document to prevent giant pages from exhausting API quotas
+        if self.max_chunks_per_doc and len(raw_chunks) > self.max_chunks_per_doc:
+            raw_chunks = raw_chunks[:self.max_chunks_per_doc]
 
         total = len(raw_chunks)
         content_chunks = []

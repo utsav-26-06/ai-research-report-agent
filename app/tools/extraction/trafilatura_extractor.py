@@ -1,8 +1,11 @@
-﻿"""
+"""
 Web content extractor using trafilatura with BeautifulSoup fallback (TASK-007).
 """
 
+from __future__ import annotations
+
 import asyncio
+import json
 import logging
 from urllib.parse import urlparse
 
@@ -11,7 +14,7 @@ from bs4 import BeautifulSoup
 from pydantic import ValidationError
 
 from app.models import SourceDocument
-from app.tools.extraction.base import ContentExtractor, ContentExtractionError
+from app.tools.extraction.base import ContentExtractionError, ContentExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +62,7 @@ class TrafilaturaExtractor(ContentExtractor):
             # We run trafilatura in a threadpool to avoid blocking the asyncio loop
             # since trafilatura.fetch_url and extract are synchronous.
             downloaded = await asyncio.to_thread(trafilatura.fetch_url, url)
-            
+
             if not downloaded:
                 logger.warning(f"Failed to download URL: {url}")
                 return None
@@ -73,14 +76,13 @@ class TrafilaturaExtractor(ContentExtractor):
                 include_images=False,
                 include_comments=False,
             )
-            
+
             text = ""
             title = ""
             author = None
             date = None
 
             if result:
-                import json
                 try:
                     data = json.loads(result)
                     text = data.get("text", "")
@@ -89,20 +91,63 @@ class TrafilaturaExtractor(ContentExtractor):
                     date = data.get("date")
                 except json.JSONDecodeError:
                     text = str(result)
-            
+
             # 2. BeautifulSoup fallback if trafilatura returned empty/None
             if not text or not text.strip():
                 logger.debug(f"Trafilatura returned empty for {url}, trying BeautifulSoup fallback.")
                 soup = BeautifulSoup(downloaded, "html.parser")
-                
+
                 # Remove script and style elements
                 for script in soup(["script", "style", "nav", "footer", "header", "aside"]):
                     script.extract()
-                    
+
                 text = soup.get_text(separator="\n", strip=True)
-                if not title and soup.title:
-                    title = soup.title.string or ""
-                    
+                if not title and soup.title and soup.title.string:
+                    title = str(soup.title.string).strip()
+
+            # 3. Comprehensive title fallback if title is still empty
+            if not title or not title.strip() or title.strip().lower() in ("untitled", "untitled document"):
+                try:
+                    soup = BeautifulSoup(downloaded, "html.parser")
+                    if soup.title and soup.title.string:
+                        title = str(soup.title.string).strip()
+
+                    if not title:
+                        og = soup.find("meta", property="og:title") or soup.find("meta", attrs={"name": "og:title"})
+                        if og:
+                            content = og.get("content")
+                            if isinstance(content, str) and content.strip():
+                                title = content.strip()
+
+                    if not title:
+                        tw = soup.find("meta", attrs={"name": "twitter:title"})
+                        if tw:
+                            content = tw.get("content")
+                            if isinstance(content, str) and content.strip():
+                                title = content.strip()
+
+                    if not title:
+                        h1 = soup.find("h1")
+                        if h1 and h1.get_text():
+                            title = h1.get_text().strip()
+                except Exception as e:
+                    logger.debug(f"Soup title extraction failed for {url}: {e}")
+
+            # 4. Final title fallback from URL slug if still empty
+            if not title or not title.strip() or title.strip().lower() in ("untitled", "untitled document"):
+                common_exts = (".html", ".htm", ".php", ".asp", ".aspx", ".jsp", ".pdf")
+                path_slug = urlparse(url).path.strip("/").split("/")[-1]
+                for ext in common_exts:
+                    if path_slug.lower().endswith(ext):
+                        path_slug = path_slug[:-len(ext)]
+                        break
+                slug_clean = path_slug.replace("-", " ").replace("_", " ").strip()
+                if len(slug_clean) > 3:
+                    title = slug_clean.title()
+                else:
+                    d_clean = domain.replace("www.", "")
+                    title = f"{d_clean.capitalize()} Article" if d_clean else "Web Article"
+
             text = text.strip()
             if len(text) < self.min_length:
                 logger.warning(

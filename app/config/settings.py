@@ -44,7 +44,7 @@ class Settings(BaseSettings):
         description="Gemini chat model to use for LLM calls",
     )
     gemini_embedding_model: str = Field(
-        default="models/text-embedding-004",
+        default="models/gemini-embedding-001",
         description="Gemini model to use for text embeddings",
     )
     llm_max_tokens: int = Field(

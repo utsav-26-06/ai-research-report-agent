@@ -1,4 +1,4 @@
-﻿"""
+"""
 Unit tests for the GeminiEmbeddingProvider (TASK-010).
 """
 
@@ -27,8 +27,8 @@ def provider(mock_genai_client):
 
 
 def test_provider_initialization(provider):
-    assert provider.model_name == "models/text-embedding-004"
-    assert provider.embedding_dim == 768
+    assert provider.model_name == "models/gemini-embedding-001"
+    assert provider.embedding_dim == 3072
 
 
 def test_missing_api_key_raises():
@@ -58,7 +58,7 @@ async def test_embed_success(provider, mock_genai_client):
     assert vectors[1] == [0.4, 0.5, 0.6]
 
     mock_genai_client.models.embed_content.assert_called_once_with(
-        model="models/text-embedding-004",
+        model="models/gemini-embedding-001",
         contents=["text1", "text2"]
     )
 
@@ -79,9 +79,9 @@ async def test_embed_api_error_retry(provider, mock_genai_client):
     mock_response.embeddings = [mock_emb]
     
     # Needs to raise APIError on first call
-    # APIError takes (message, code, etc), let's just make it throw
+    # APIError takes (code: int, response_json: Any, ...)
     mock_genai_client.models.embed_content.side_effect = [
-        APIError("Rate Limit", {}),
+        APIError(429, {"message": "Rate Limit"}),
         mock_response
     ]
 
@@ -112,7 +112,7 @@ async def test_embed_chunks_batching(provider, mock_genai_client):
         emb_list = []
         for _ in contents:
             emb = MagicMock()
-            emb.values = [0.5] * 768
+            emb.values = [0.5] * 3072
             emb_list.append(emb)
         response.embeddings = emb_list
         return response
@@ -127,7 +127,20 @@ async def test_embed_chunks_batching(provider, mock_genai_client):
     
     # Check the embedded chunk contents
     assert embedded_chunks[0].chunk_id == chunks[0].chunk_id
-    assert embedded_chunks[0].model == "models/text-embedding-004"
-    assert len(embedded_chunks[0].embedding) == 768
+    assert embedded_chunks[0].model == "models/gemini-embedding-001"
+    assert len(embedded_chunks[0].embedding) == 3072
+
+
+@pytest.mark.asyncio
+async def test_embed_api_error_exhausts_retries(provider, mock_genai_client):
+    # Consistently fail with 429
+    mock_genai_client.models.embed_content.side_effect = APIError(429, {"message": "Rate Limit Exhausted"})
+
+    with patch("asyncio.sleep", return_value=None):
+        with pytest.raises((APIError, EmbeddingProviderError)):
+            await provider.embed(["test"])
+    
+    assert mock_genai_client.models.embed_content.call_count == 5
+
 
 

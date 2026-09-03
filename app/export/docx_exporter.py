@@ -1,4 +1,4 @@
-﻿"""
+"""
 DOCX Exporter (TASK-016).
 Exports a ResearchReport as a professionally formatted .docx file.
 """
@@ -130,9 +130,10 @@ class DocxExporter:
         # -----------------------------------------------------------------
         # Save
         # -----------------------------------------------------------------
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        safe_title = "".join(c for c in report.title if c.isalnum() or c in " _-")[:60].strip()
-        filename = f"{safe_title}.docx"
+        safe_title = "".join(c for c in report.title if c.isalnum() or c in " _-").strip()
+        if len(safe_title) > 100:
+            safe_title = safe_title[:100].rsplit(" ", 1)[0].strip()
+        filename = f"{safe_title or 'Research_Report'}.docx"
         filepath = self.output_dir / filename
         doc.save(str(filepath))
         logger.info(f"DOCX saved to: {filepath}")

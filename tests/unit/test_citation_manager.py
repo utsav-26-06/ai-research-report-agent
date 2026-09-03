@@ -1,4 +1,4 @@
-﻿"""
+"""
 Unit tests for CitationManager (TASK-014).
 """
 
@@ -84,4 +84,22 @@ def test_empty_citations():
     assert finding.claim == "No evidence"
     assert len(manager.all_citations) == 0
     assert manager.get_reference_list() == ""
+
+
+def test_untitled_document_fallback():
+    """Verify that citations with missing or 'Untitled Document' title derive a meaningful title from URL."""
+    manager = CitationManager()
+    finding = Finding(
+        claim="Claim with untitled source",
+        citations=[
+            _make_citation("https://fortegrp.com/insights/ai-coding-assistants", title="Untitled Document", domain="fortegrp.com"),
+            _make_citation("https://arxiv.org/html/2602.03593v1", title="", domain="arxiv.org")
+        ]
+    )
+    manager.process_findings([finding])
+    ref_list = manager.get_reference_list()
+    assert "Untitled Document" not in ref_list
+    assert "Ai Coding Assistants" in ref_list
+    assert "2602.03593V1" in ref_list or "Arxiv.org" in ref_list
+
 

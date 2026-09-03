@@ -1,4 +1,4 @@
-﻿"""
+"""
 Research Controller — main pipeline orchestrator (TASK-018).
 
 Coordinates all stages from topic input to final exported reports:
@@ -143,7 +143,9 @@ class ResearchController:
         # Stage 4: Evaluate & Filter
         # ----------------------------------------------------------
         await self._emit(progress, "Evaluation", "Evaluating source quality...")
-        accepted_docs = await self._evaluate_all(raw_docs, request.topic, progress)
+        accepted_docs = await self._evaluate_all(
+            raw_docs, request.topic, progress, max_sources=request.max_sources
+        )
         sources_analyzed = len(raw_docs)
         sources_included = len(accepted_docs)
         await self._emit(
@@ -275,6 +277,9 @@ class ResearchController:
                         sub_question_id=r.sub_question_id,
                         query=r.query if hasattr(r, "query") else "",
                     )
+                    if doc is not None:
+                        if (not doc.title or doc.title.strip().lower() in ("untitled", "untitled document")) and hasattr(r, "title") and r.title:
+                            doc.title = r.title.strip()
                     return doc
                 except Exception as e:
                     logger.warning(f"Extraction failed for {r.url}: {e}")
@@ -284,16 +289,73 @@ class ResearchController:
         results = await asyncio.gather(*tasks)
         return [doc for doc in results if doc is not None]
 
-    async def _evaluate_all(self, docs: list[SourceDocument], topic: str, progress):
-        """Evaluate sources sequentially (avoids LLM rate-limit bursts)."""
-        accepted = []
-        for doc in docs:
+    async def _evaluate_all(
+        self,
+        docs: list[SourceDocument],
+        topic: str,
+        progress: ProgressCallback | None = None,
+        max_sources: int = 15,
+    ) -> list[SourceDocument]:
+        """
+        Evaluate sources sequentially, prioritizing candidates across sub-questions
+        and stopping early once max_sources is reached.
+        """
+        if not docs:
+            return []
+
+        # Filter out empty or error pages (min 150 chars and exclude common error titles)
+        error_titles = (
+            "403 forbidden",
+            "404 not found",
+            "access denied",
+            "robot or human",
+            "captcha",
+            "just a moment",
+            "attention required",
+        )
+        valid_docs = [
+            d for d in docs
+            if len(d.text.strip()) >= 150
+            and not any(err in (d.title or "").lower() for err in error_titles)
+        ]
+        if not valid_docs:
+            valid_docs = docs
+
+        # Prioritize candidates across sub-questions so all sub-questions get representation
+        sq_groups: dict[str, list[SourceDocument]] = {}
+        for d in valid_docs:
+            sq_groups.setdefault(d.sub_question_id, []).append(d)
+
+        # Pick top candidates balanced across sub-questions up to a reasonable cap
+        max_candidates = max(8, min(len(valid_docs), max_sources + 5))
+        candidates: list[SourceDocument] = []
+        max_per_sq = max(2, (max_candidates // max(1, len(sq_groups))) + 1)
+        for sq_id, group in sq_groups.items():
+            candidates.extend(group[:max_per_sq])
+
+        candidates = candidates[:max_candidates]
+        total_eval = len(candidates)
+
+        accepted: list[SourceDocument] = []
+        for idx, doc in enumerate(candidates):
+            if len(accepted) >= max_sources:
+                logger.info(f"Target of {max_sources} accepted sources reached. Stopping evaluation.")
+                break
+
+            doc_label = (doc.title or doc.url)[:40]
+            await self._emit(
+                progress,
+                "Evaluation",
+                f"Evaluating source ({idx + 1}/{total_eval}): {doc_label}... ({len(accepted)} accepted so far)",
+            )
+
             try:
                 evaluation = await self.evaluator.evaluate(doc=doc, query=topic, already_included=accepted)
                 if evaluation.is_included:
                     accepted.append(doc)
             except Exception as e:
                 logger.warning(f"Evaluation failed for {doc.url}: {e}. Skipping source.")
+
         return accepted
 
     @staticmethod

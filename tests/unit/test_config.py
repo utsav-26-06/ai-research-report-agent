@@ -1,4 +1,4 @@
-﻿"""
+"""
 Unit tests for app.config.settings â€” TASK-002 (Gemini stack)
 
 Tests run without real API keys by injecting environment variable overrides.
@@ -22,7 +22,7 @@ VALID_ENV = {
     "GEMINI_API_KEY": "AIzaTestKey1234567890",
     "TAVILY_API_KEY": "tvly-test-key-1234567890",
     "GEMINI_MODEL": "gemini-3.5-flash",
-    "GEMINI_EMBEDDING_MODEL": "models/text-embedding-004",
+    "GEMINI_EMBEDDING_MODEL": "models/gemini-embedding-001",
     "LLM_MAX_TOKENS": "4096",
     "LLM_TEMPERATURE": "0.2",
     "TAVILY_MAX_RESULTS": "5",
@@ -91,7 +91,7 @@ class TestSettingsLoading:
 
     def test_loads_gemini_embedding_model(self):
         s = make_settings()
-        assert s.gemini_embedding_model == "models/text-embedding-004"
+        assert s.gemini_embedding_model == "models/gemini-embedding-001"
 
     def test_loads_llm_max_tokens(self):
         s = make_settings()
@@ -210,35 +210,23 @@ class TestDefaults:
 
     def test_default_gemini_model(self):
         env = {k: v for k, v in VALID_ENV.items() if k != "GEMINI_MODEL"}
-        get_settings.cache_clear()
-        with patch.dict(os.environ, env, clear=True):
-            from app.config.settings import Settings
-            s = Settings()
+        s = make_settings_no_file(**env)
         assert s.gemini_model == "gemini-3.5-flash"
 
     def test_default_chunk_size(self):
         env = {k: v for k, v in VALID_ENV.items() if k != "CHUNK_SIZE"}
-        get_settings.cache_clear()
-        with patch.dict(os.environ, env, clear=True):
-            from app.config.settings import Settings
-            s = Settings()
+        s = make_settings_no_file(**env)
         assert s.chunk_size == 800
 
     def test_default_log_level(self):
         env = {k: v for k, v in VALID_ENV.items() if k != "LOG_LEVEL"}
-        get_settings.cache_clear()
-        with patch.dict(os.environ, env, clear=True):
-            from app.config.settings import Settings
-            s = Settings()
+        s = make_settings_no_file(**env)
         assert s.log_level == "INFO"
 
     def test_default_embedding_model(self):
         env = {k: v for k, v in VALID_ENV.items() if k != "GEMINI_EMBEDDING_MODEL"}
-        get_settings.cache_clear()
-        with patch.dict(os.environ, env, clear=True):
-            from app.config.settings import Settings
-            s = Settings()
-        assert s.gemini_embedding_model == "models/text-embedding-004"
+        s = make_settings_no_file(**env)
+        assert s.gemini_embedding_model == "models/gemini-embedding-001"
 
 
 # ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Unit tests for PDFExporter (TASK-017).
 """
 
@@ -85,3 +85,21 @@ async def test_pdf_contains_all_sections():
         # Use ReportLab canvas inspection: verify file is parseable.
         # For a real text check, we rely on file size > 0 and valid PDF header.
         assert filepath.stat().st_size > 1000, "PDF seems too small to contain all sections."
+
+
+@pytest.mark.asyncio
+async def test_pdf_with_long_title_and_references():
+    """Verify PDF export handles long title (footer truncation) and multi-line references cleanly."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        exporter = PDFExporter(output_dir=tmpdir)
+        report = _make_report()
+        report.title = "The Impact of Artificial Intelligence and Machine Learning Models on Modern Enterprise Software Development Workflows"
+        report.sections[-1].content = (
+            "[1] AI Coding Assistants: Benefits and Pitfalls. fortegrp.com. Retrieved from https://fortegrp.com/insights/ai-coding-assistants\n"
+            "[2] Security in Automated Code Generation. endorlabs.com. Retrieved from https://www.endorlabs.com/learn/the-most-common-security-vulnerabilities-in-ai-generated-code\n"
+            "[3] Testing and Implementing AI Test Automation in QA Processes. panaya.com. Retrieved from https://www.panaya.com/blog/testing/implementing-ai-test-automation-in-your-qa-processes"
+        )
+        filepath = await exporter.export(report)
+        assert filepath.exists()
+        assert filepath.stat().st_size > 1000
+

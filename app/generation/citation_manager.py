@@ -1,9 +1,35 @@
-﻿"""
+"""
 Citation Management Module (TASK-014).
 Handles deduplication of citations across findings and builds the final reference list.
 """
 
+from urllib.parse import urlparse
 from app.models.report import Citation, Finding
+
+
+def clean_title_or_fallback(title: str | None, url: str, domain: str = "") -> str:
+    """Ensure a clean, human-readable title; derive from URL/domain if missing or generic."""
+    if title:
+        t = title.strip()
+        if t and t.lower() not in ("untitled", "untitled document", "none", "null", "unknown"):
+            return t
+
+    parsed = urlparse(url)
+    dom = domain.replace("www.", "").strip() if domain else parsed.netloc.replace("www.", "").strip()
+
+    common_exts = (".html", ".htm", ".php", ".asp", ".aspx", ".jsp", ".pdf")
+    path = parsed.path.strip("/")
+    if path:
+        slug = path.split("/")[-1]
+        for ext in common_exts:
+            if slug.lower().endswith(ext):
+                slug = slug[:-len(ext)]
+                break
+        slug_clean = slug.replace("-", " ").replace("_", " ").strip()
+        if len(slug_clean) > 3:
+            return f"{slug_clean.title()} ({dom})" if dom else slug_clean.title()
+
+    return f"{dom.capitalize()} Article" if dom else "Web Source"
 
 
 class CitationManager:
@@ -23,11 +49,12 @@ class CitationManager:
         Update findings with globally deduplicated citations and append markers to claims.
         """
         for finding in findings:
-            # We must preserve the original Citation objects but update their markers,
-            # or just map them to the unique ones.
             unique_markers_for_finding = set()
             
             for cit in finding.citations:
+                # Ensure citation has a clean title
+                cit.title = clean_title_or_fallback(cit.title, cit.url, cit.domain)
+
                 if cit.url not in self._url_to_marker:
                     # Assign a new sequential marker
                     marker = f"[{len(self._url_to_marker) + 1}]"
@@ -44,14 +71,12 @@ class CitationManager:
 
             # Append markers to the end of the claim if there are citations
             if unique_markers_for_finding:
-                # Sort markers numerically (e.g., "[1]", "[2]")
                 sorted_markers = sorted(
                     list(unique_markers_for_finding), 
                     key=lambda x: int(x.strip("[]"))
                 )
                 marker_suffix = " ".join(sorted_markers)
                 
-                # Simple append (a smarter regex could replace local LLM-generated markers)
                 if not finding.claim.endswith(marker_suffix):
                     finding.claim = f"{finding.claim.strip()} {marker_suffix}"
                     
@@ -69,10 +94,9 @@ class CitationManager:
         """
         lines = []
         for cit in self._unique_citations:
-            title = cit.title.strip() if cit.title else "Untitled Document"
+            title = clean_title_or_fallback(cit.title, cit.url, cit.domain)
             domain = cit.domain.strip() if cit.domain else "Unknown Domain"
             
-            # APA-ish format
             line = f"{cit.marker} {title}. {domain}. Retrieved from {cit.url}"
             lines.append(line)
             

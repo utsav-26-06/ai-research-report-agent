@@ -2,14 +2,17 @@ from __future__ import annotations
 import streamlit as st
 from app.models.report import ResearchReport
 
-_CSS_PATH = __file__.replace('components.py', '.css_cache')
-with open(_CSS_PATH, encoding='utf-8') as _f:
-    CSS = '<style>' + _f.read() + '</style>'
+from pathlib import Path
+
+_CSS_PATH = Path(__file__).resolve().parent / ".css_cache"
 
 def inject_css():
-    st.markdown(CSS, unsafe_allow_html=True)
+    if _CSS_PATH.exists():
+        with open(_CSS_PATH, encoding="utf-8") as _f:
+            st.markdown(f"<style>{_f.read()}</style>", unsafe_allow_html=True)
 
 def render_hero():
+    inject_css()
     h = [
         '<div class="hero-section">',
         '<div class="hero-badge">AI-Powered Research</div>',
@@ -22,6 +25,10 @@ def render_hero():
         '</div></div>',
     ]
     st.markdown(''.join(h), unsafe_allow_html=True)
+
+
+# Alias for render_hero
+render_header = render_hero
 
 def render_section_header(label, icon=''):
     pre = f'{icon} ' if icon else ''
