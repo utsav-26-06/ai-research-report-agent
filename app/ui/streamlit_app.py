@@ -1,10 +1,17 @@
-﻿"""
-Streamlit web UI for the AI Research & Report Agent (TASK-020).
+from __future__ import annotations
+import sys
+from pathlib import Path as _Path
+
+# Ensure project root is on sys.path so 'import app' works from any cwd.
+_ROOT = _Path(__file__).resolve().parent.parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+"""Streamlit web UI for the AI Research & Report Agent (TASK-020).
 
 Run with:  streamlit run app/ui/streamlit_app.py
 """
 
-from __future__ import annotations
 
 import asyncio
 import logging
@@ -227,3 +234,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
